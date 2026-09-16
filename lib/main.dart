@@ -27,6 +27,11 @@ class HomePage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Image.network(
+              'https://picsum.photos/200',
+              height: 150,
+            ),
+            const SizedBox(height: 20),
             const Text('Welcome to the demo app', style: TextStyle(fontSize: 20)),
             const SizedBox(height: 20),
             ElevatedButton(
