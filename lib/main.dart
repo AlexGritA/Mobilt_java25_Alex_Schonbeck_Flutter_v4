@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
@@ -60,6 +61,25 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   bool darkMode = false;
   double satisfaction = 5.0;
+  final TextEditingController nameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadName();
+  }
+
+  Future<void> _loadName() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      nameController.text = prefs.getString('name') ?? '';
+    });
+  }
+
+  Future<void> _saveName(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('name', name);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,8 +89,12 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            const TextField(
+            TextField(
+              controller: nameController,
               decoration: InputDecoration(labelText: 'Your name'),
+              onChanged: (value) {
+                _saveName(value);
+              },
             ),
             const SizedBox(height: 20),
             SwitchListTile(
