@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 void main() {
   runApp(const MyApp());
@@ -23,25 +25,22 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar:AppBar(title: const Text('Home')),
+      appBar: AppBar(title: const Text('Home')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.network(
-              'https://picsum.photos/200',
-              height: 150,
-            ),
+            Image.network('https://picsum.photos/200', height: 150),
             const SizedBox(height: 20),
             const Text('Welcome to the demo app', style: TextStyle(fontSize: 20)),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ProfilePage()),
-                  );
-                },
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfilePage()),
+                );
+              },
               child: const Text('Go to Profile'),
             ),
           ],
@@ -91,7 +90,7 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             TextField(
               controller: nameController,
-              decoration: InputDecoration(labelText: 'Your name'),
+              decoration: const InputDecoration(labelText: 'Your name'),
               onChanged: (value) {
                 _saveName(value);
               },
@@ -119,6 +118,61 @@ class _ProfilePageState extends State<ProfilePage> {
                 });
               },
             ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SensorPage()),
+                );
+              },
+              child: const Text('Go to Sensor'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SensorPage extends StatefulWidget {
+  const SensorPage({super.key});
+
+  @override
+  State<SensorPage> createState() => _SensorPageState();
+}
+
+class _SensorPageState extends State<SensorPage> {
+  double x = 0, y = 0, z = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!kIsWeb) {
+      accelerometerEventStream().listen((event) {
+        setState(() {
+          x = event.x;
+          y = event.y;
+          z = event.z;
+        });
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Sensor')),
+      body: Center(
+        child: kIsWeb
+            ? const Text('Accelerometer not available on web',
+            style: TextStyle(fontSize: 18))
+            : Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('X: ${x.toStringAsFixed(2)}'),
+            Text('Y: ${y.toStringAsFixed(2)}'),
+            Text('Z: ${z.toStringAsFixed(2)}'),
           ],
         ),
       ),
