@@ -3,10 +3,13 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
+// Entry point of the whole app — Flutter's equivalent of onCreate/main()
 void main() {
   runApp(const MyApp());
 }
 
+// Root widget of the app. Stateless because it never changes itself —
+// it just sets up the theme/title and points to the first screen.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -19,6 +22,8 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// First screen the user sees. Stateless because nothing on this
+// screen changes on its own — it's just a static image, text and button.
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -50,6 +55,9 @@ class HomePage extends StatelessWidget {
   }
 }
 
+// Profile screen. StatefulWidget because it contains widgets whose
+// values change while the user interacts with them (text field,
+// switch, slider) — a Stateless widget couldn't do that.
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -57,17 +65,25 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
+// The actual mutable data and UI-building logic for ProfilePage live
+// here, in a separate State class. Flutter keeps this same State
+// object alive across rebuilds, which is why our values persist
+// while the user interacts with the screen.
 class _ProfilePageState extends State<ProfilePage> {
   bool darkMode = false;
   double satisfaction = 5.0;
   final TextEditingController nameController = TextEditingController();
 
+  // Runs once when this screen is first created —
+  // we use it to load any previously saved name.
   @override
   void initState() {
     super.initState();
     _loadName();
   }
 
+  // Reading from SharedPreferences is not instant,
+  // so this function waits for it to finish before updating the screen.
   Future<void> _loadName() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -75,6 +91,8 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
+  // Saves the name every time the text field changes, so the value
+  // is persisted immediately rather than only on some "save" button.
   Future<void> _saveName(String name) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('name', name);
@@ -88,6 +106,8 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
+            // Interactive widget #1: TextField, tied to a controller
+            // so we can read/write its value from code
             TextField(
               controller: nameController,
               decoration: const InputDecoration(labelText: 'Your name'),
@@ -96,6 +116,8 @@ class _ProfilePageState extends State<ProfilePage> {
               },
             ),
             const SizedBox(height: 20),
+            // Interactive widget #2: Switch. setState() tells Flutter
+            // "something changed, rebuild the UI" every time it's toggled
             SwitchListTile(
               title: const Text('Dark mode'),
               value: darkMode,
@@ -107,6 +129,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 20),
             Text('Satisfaction: ${satisfaction.round()}'),
+            // Interactive widget #3: Slider, same setState() pattern
             Slider(
               value: satisfaction,
               min: 0,
@@ -135,6 +158,8 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
+// Sensor screen — StatefulWidget because the X/Y/Z values change
+// continuously as the accelerometer sends new readings.
 class SensorPage extends StatefulWidget {
   const SensorPage({super.key});
 
@@ -148,6 +173,8 @@ class _SensorPageState extends State<SensorPage> {
   @override
   void initState() {
     super.initState();
+    // Accelerometer isn't available in browsers, so we only start
+    // listening to sensor events on Android
     if (!kIsWeb) {
       accelerometerEventStream().listen((event) {
         setState(() {
@@ -164,6 +191,8 @@ class _SensorPageState extends State<SensorPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Sensor')),
       body: Center(
+        // Same kIsWeb check here — shows a clear fallback message
+        // on web instead of blank/broken sensor values
         child: kIsWeb
             ? const Text('Accelerometer not available on web',
             style: TextStyle(fontSize: 18))
